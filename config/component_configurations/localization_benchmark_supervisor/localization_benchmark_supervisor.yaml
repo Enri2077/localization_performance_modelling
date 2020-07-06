@@ -10,8 +10,9 @@ robot_radius: 0.2
 
 # topic names
 scan_topic: /scan
+amcl_particles_topic: /particlecloud
 estimated_pose_correction_topic: /amcl_pose
-ground_truth_pose_topic: /ground_truth/base_footprint/odom
+ground_truth_pose_topic: /base_footprint_gt
 initial_pose_topic: /initialpose
 
 # service names
