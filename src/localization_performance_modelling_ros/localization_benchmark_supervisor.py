@@ -22,7 +22,7 @@ from actionlib_msgs.msg import GoalStatus
 from move_base_msgs.msg import MoveBaseGoal, MoveBaseAction
 from gazebo_msgs.msg import ModelState
 from gazebo_msgs.srv import SetModelState
-from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Quaternion, PoseStamped
+from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Quaternion, PoseStamped, PoseArray
 from nav_msgs.msg import Odometry, Path
 from sensor_msgs.msg import LaserScan
 from std_srvs.srv import Empty
@@ -63,6 +63,7 @@ class LocalizationBenchmarkSupervisor:
 
         # topics, services, actions, entities and frames names
         scan_topic = rospy.get_param('~scan_topic')
+        amcl_particles_topic = rospy.get_param('~amcl_particles_topic')
         ground_truth_pose_topic = rospy.get_param('~ground_truth_pose_topic')
         estimated_pose_correction_topic = rospy.get_param('~estimated_pose_correction_topic')
         initial_pose_topic = rospy.get_param('~initial_pose_topic')
@@ -123,6 +124,7 @@ class LocalizationBenchmarkSupervisor:
         self.estimated_correction_poses_file_path = path.join(self.benchmark_data_folder, "estimated_correction_poses.csv")
         self.ground_truth_poses_file_path = path.join(self.benchmark_data_folder, "ground_truth_poses.csv")
         self.scans_file_path = path.join(self.benchmark_data_folder, "scans.csv")
+        self.amcl_particles_file_path = path.join(self.benchmark_data_folder, "amcl_particles.csv")
         self.run_events_file_path = path.join(self.benchmark_data_folder, "run_events.csv")
         self.init_run_events_file()
 
@@ -152,13 +154,12 @@ class LocalizationBenchmarkSupervisor:
 
         # setup subscribers
         rospy.Subscriber(scan_topic, LaserScan, self.scan_callback, queue_size=1)
+        rospy.Subscriber(amcl_particles_topic, PoseArray, self.amcl_particles_callback, queue_size=1)
         rospy.Subscriber(estimated_pose_correction_topic, PoseWithCovarianceStamped, self.estimated_pose_correction_callback, queue_size=1)
         rospy.Subscriber(ground_truth_pose_topic, Odometry, self.ground_truth_pose_callback, queue_size=1)
 
         # setup action clients
         self.navigate_to_pose_action_client = SimpleActionClient(navigate_to_pose_action, MoveBaseAction)
-        # self.navigate_to_pose_action_goal_future = None
-        # self.navigate_to_pose_action_result_future = None
 
     def start_run(self):
         print_info("preparing to start run")
@@ -228,7 +229,6 @@ class LocalizationBenchmarkSupervisor:
         # pop the first pose from traversal_path_poses and set it as initial pose
         self.initial_pose = PoseWithCovarianceStamped()
         self.initial_pose.header.frame_id = self.fixed_frame
-        self.initial_pose.header.stamp = rospy.Time.now()
         self.initial_pose.pose.pose = self.traversal_path_poses.popleft()
         self.initial_pose.pose.covariance = list(self.initial_pose_covariance_matrix.flat)
 
@@ -258,24 +258,19 @@ class LocalizationBenchmarkSupervisor:
         print_info("called set_entity_state_service")
         time.sleep(1.0)
 
-        self.initial_pose_publisher.publish(self.initial_pose)
-        self.write_event("initial_pose_set")
-
         try:
             self.unpause_physics_service_client.wait_for_service(5.0)
         except rospy.ROSException:
             raise RunFailException("unpause_physics_service_client unavailable")
         self.unpause_physics_service_client.call()
         print_info("called unpause_physics_service")
-        time.sleep(5.0)
+        time.sleep(1.0)
 
-        # # wait for global_localization_service_client to be ready to make sure the localization component can localize, then send the initial pose
-        # try:
-        #     self.global_localization_service_client.wait_for_service(5.0)
-        # except rospy.ROSException:
-        #     raise RunFailException("global_localization_service_client unavailable")
+        # send the initial pose to the localization node
+        self.initial_pose.header.stamp = rospy.Time.now()
+        self.initial_pose_publisher.publish(self.initial_pose)
+        self.write_event("initial_pose_set")
 
-        time.sleep(5.0)
         self.write_event('run_start')
         self.run_started = True
 
@@ -283,7 +278,7 @@ class LocalizationBenchmarkSupervisor:
         while not rospy.is_shutdown():
             print_info("goal {} / {}".format(self.goal_sent_count + 1, self.num_goals))
 
-            if not self.navigate_to_pose_action_client.wait_for_server(timeout=rospy.Duration.from_sec(50.0)):
+            if not self.navigate_to_pose_action_client.wait_for_server(timeout=rospy.Duration.from_sec(5.0)):
                 self.write_event('failed_to_communicate_with_navigation_node')
                 raise RunFailException("navigate_to_pose action server not available")
 
@@ -330,6 +325,8 @@ class LocalizationBenchmarkSupervisor:
                 rospy.signal_shutdown("run_completed")
                 return
 
+            rospy.sleep(1.0)
+
     def ros_shutdown_callback(self):
         """
         This function is called when the node receives an interrupt signal (KeyboardInterrupt).
@@ -369,6 +366,28 @@ class LocalizationBenchmarkSupervisor:
                 range_min=laser_scan_msg.range_min,
                 range_max=laser_scan_msg.range_max,
                 ranges=', '.join(map(str, laser_scan_msg.ranges))))
+
+    def amcl_particles_callback(self, pose_array_msg):
+        if not self.run_started:
+            return
+
+        msg_time = pose_array_msg.header.stamp.to_sec()
+        poses_str = str()
+        for particle_pose in pose_array_msg.poses:
+            x, y = particle_pose.position.x, particle_pose.position.y
+            theta, _, _ = pyquaternion.Quaternion(
+                x=particle_pose.orientation.x,
+                y=particle_pose.orientation.y,
+                z=particle_pose.orientation.z,
+                w=particle_pose.orientation.w).yaw_pitch_roll
+            poses_str += ', '.join(map(str, [x, y, theta]))
+
+        with open(self.amcl_particles_file_path, 'a') as amcl_particles_file:
+            amcl_particles_file.write("{t}, {frame_id}, {n}, {poses}\n".format(
+                t=msg_time,
+                frame_id=pose_array_msg.header.frame_id,
+                n=len(pose_array_msg.poses),
+                poses=poses_str))
 
     def write_estimated_pose_timer_callback(self, _):
         if not self.run_started:
