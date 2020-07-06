@@ -33,7 +33,8 @@ class BenchmarkRun(object):
         # environment parameters
         self.environment_folder = environment_folder
         self.ground_truth_map_info_path = path.join(environment_folder, "data", "map.yaml")
-        self.realistic_map_info_path = path.join(environment_folder, "data", "realistic_map", "map.yaml")
+        # self.realistic_map_info_path = path.join(environment_folder, "data", "realistic_map", "map.yaml")  # TODO change back after all envs are mapped
+        self.realistic_map_info_path = self.ground_truth_map_info_path  # TODO remove after all envs are mapped
         self.slam_toolbox_posegraph_path = path.join(environment_folder, "data", "realistic_map", "slam_toolbox_pose_graph")
         self.gazebo_model_path_env_var = ":".join(map(
             lambda p: path.expanduser(p),
