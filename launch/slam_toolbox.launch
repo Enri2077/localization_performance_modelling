@@ -5,7 +5,7 @@
 
   <node name="slam_toolbox"
         pkg="slam_toolbox"
-        type="async_slam_toolbox_node"
+        type="localization_slam_toolbox_node"
         output="screen">
     <rosparam file="$(arg params_file)" />
   </node>
