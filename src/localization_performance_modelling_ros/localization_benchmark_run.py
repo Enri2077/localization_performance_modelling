@@ -33,9 +33,6 @@ class BenchmarkRun(object):
         # environment parameters
         self.environment_folder = environment_folder
         self.ground_truth_map_info_path = path.join(environment_folder, "data", "map.yaml")
-        # self.realistic_map_info_path = path.join(environment_folder, "data", "realistic_map", "map.yaml")  # TODO change back after all envs are mapped
-        self.realistic_map_info_path = self.ground_truth_map_info_path  # TODO remove after all envs are mapped
-        self.slam_toolbox_posegraph_path = path.join(environment_folder, "data", "realistic_map", "slam_toolbox_pose_graph")
         self.gazebo_model_path_env_var = ":".join(map(
             lambda p: path.expanduser(p),
             self.benchmark_configuration['gazebo_model_path_env_var'] + [path.dirname(path.abspath(self.environment_folder)), self.run_output_folder]
@@ -48,7 +45,11 @@ class BenchmarkRun(object):
         laser_scan_max_range = self.run_parameters['laser_scan_max_range']
         laser_scan_fov_deg = self.run_parameters['laser_scan_fov_deg']
         laser_scan_fov_rad = laser_scan_fov_deg*np.pi/180
+        map_resolution = self.run_parameters['map_resolution']
         self.localization_node = self.run_parameters['localization_node']
+        slam_params_folder_name = "res_{res}_fov_{fov}_max_range_{max_range}".format(res=map_resolution, fov=laser_scan_fov_deg, max_range=60.0)
+        self.slam_toolbox_posegraph_path = path.join(environment_folder, "data", "realistic_map", slam_params_folder_name, "pose_graph")
+        self.amcl_map_info_path = path.join(environment_folder, "data", "realistic_map", slam_params_folder_name, "map.yaml")
 
         # run variables
         self.aborted = False
@@ -250,6 +251,9 @@ class BenchmarkRun(object):
             # TODO 'rviz_config_file': self.original_rviz_configuration_path,
             'headless': self.headless,
         }
+        ground_truth_map_server_params = {
+            'map': self.ground_truth_map_info_path,
+        }
         environment_params = {
             'world_model_file': self.gazebo_world_model_path,
             'robot_gt_urdf_file': self.robot_gt_urdf_path,
@@ -259,7 +263,7 @@ class BenchmarkRun(object):
         if self.localization_node == 'amcl':
             localization_params = {
                 'params_file': self.amcl_configuration_path,
-                'map': self.realistic_map_info_path,
+                'map': self.amcl_map_info_path,
             }
         elif self.localization_node == 'slam_toolbox':
             localization_params = {
@@ -285,6 +289,7 @@ class BenchmarkRun(object):
             localization = Component('slam_toolbox', 'localization_performance_modelling', 'slam_toolbox.launch', localization_params)
         else:
             raise ValueError()
+        ground_truth_map_server = Component('ground_truth_map_server', 'ground_truth_mapping', 'ground_truth_map_server.launch', ground_truth_map_server_params)
         navigation = Component('move_base', 'localization_performance_modelling', 'move_base.launch', navigation_params)
         supervisor = Component('supervisor', 'localization_performance_modelling', 'localization_benchmark_supervisor.launch', supervisor_params)
 
@@ -298,6 +303,7 @@ class BenchmarkRun(object):
         rviz.launch()
         # recorder.launch()
         localization.launch()
+        ground_truth_map_server.launch()
         navigation.launch()
         supervisor.launch()
 
@@ -307,6 +313,7 @@ class BenchmarkRun(object):
         self.log(event="supervisor_shutdown")
 
         # shut down components
+        ground_truth_map_server.shutdown()
         navigation.shutdown()
         localization.shutdown()
         # recorder.shutdown()
