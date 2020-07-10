@@ -7,14 +7,12 @@ ARG user_group
 
 
 # create user
-
 RUN \
   groupadd --gid $user_gid $user_group && \
   useradd --uid $user_uid --gid $user_group --shell /bin/bash --create-home $user_name
 
 
 # Install dependences
-
 RUN \
   sudo apt update && \
   sudo apt install -y \
@@ -42,20 +40,21 @@ RUN \
     ros-melodic-dwa-local-planner \
     && rm -rf /var/lib/apt/lists/*
 
-RUN \
-  pip install pyquaternion && \
-  pip3 install pyquaternion && \
-  pip install networkx && \
-  pip3 install networkx
+
+# copy enrtypoint
+COPY ros_entrypoint.sh /ros_entrypoint.sh
 
 
 # switch to user
-
 USER $user_name:$user_group
 
 
-# clone repos
+# copy bashrc files
+COPY .bashrc ~/.bashrc
+COPY .bash_aliases ~/.bash_aliases
 
+
+# clone repos
 RUN mkdir -p ~/w/catkin_ws/src
 RUN \
   cd ~/w/catkin_ws/src && \
@@ -66,22 +65,19 @@ RUN \
   git clone --branch=melodic-ground-truth-mapping https://github.com/Enri2077/slam_toolbox.git
 
 
-# build workspace
-
+# build workspace and install python user packages
 RUN \
   source /opt/ros/melodic/setup.bash && \
   cd ~/w/catkin_ws && \
-  catkin build && \
-  echo "source ~/w/catkin_ws/devel/setup.bash" >> ~/.bashrc
+  catkin build
 
+RUN \
+  pip install pyquaternion && \
+  pip3 install pyquaternion && \
+  pip install networkx && \
+  pip3 install networkx
 
 RUN \
   cd ~/w/catkin_ws/src/performance_modelling/ && \
   ./install_dev.sh
-
-COPY ros_entrypoint.sh /ros_entrypoint.sh
-
-# temp
-#RUN echo "alias r='rosrun localization_performance_modelling execute_grid_benchmark.py -g'" >> ~/.bashrc
-
 
