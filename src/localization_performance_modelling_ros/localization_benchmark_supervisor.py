@@ -20,12 +20,9 @@ import tf2_ros
 from actionlib import SimpleActionClient
 from actionlib_msgs.msg import GoalStatus
 from move_base_msgs.msg import MoveBaseGoal, MoveBaseAction
-from gazebo_msgs.msg import ModelState
-from gazebo_msgs.srv import SetModelState
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Quaternion, PoseStamped, PoseArray
 from nav_msgs.msg import Odometry, Path
 from sensor_msgs.msg import LaserScan
-from std_srvs.srv import Empty
 
 from performance_modelling_py.environment import ground_truth_map
 from performance_modelling_py.utils import backup_file_if_exists, print_info, print_error
@@ -56,6 +53,9 @@ def main():
     finally:
         if node is not None:
             node.end_run()
+        if not rospy.is_shutdown():
+            print_info("calling rospy signal_shutdown")
+            rospy.signal_shutdown("run_terminated")
 
 
 class LocalizationBenchmarkSupervisor:
@@ -66,11 +66,6 @@ class LocalizationBenchmarkSupervisor:
         amcl_particles_topic = rospy.get_param('~amcl_particles_topic')
         ground_truth_pose_topic = rospy.get_param('~ground_truth_pose_topic')
         estimated_pose_correction_topic = rospy.get_param('~estimated_pose_correction_topic')
-        initial_pose_topic = rospy.get_param('~initial_pose_topic')
-        pause_physics_service = rospy.get_param('~pause_physics_service')
-        unpause_physics_service = rospy.get_param('~unpause_physics_service')
-        set_entity_state_service = rospy.get_param('~set_entity_state_service')
-        global_localization_service = rospy.get_param('~global_localization_service')
         navigate_to_pose_action = rospy.get_param('~navigate_to_pose_action')
         self.fixed_frame = rospy.get_param('~fixed_frame')
         self.robot_base_frame = rospy.get_param('~robot_base_frame')
@@ -138,18 +133,11 @@ class LocalizationBenchmarkSupervisor:
         rospy.Timer(rospy.Duration.from_sec(ps_snapshot_period), self.ps_snapshot_timer_callback)
         rospy.Timer(rospy.Duration.from_sec(write_estimated_poses_period), self.write_estimated_pose_timer_callback)
 
-        # setup service clients
-        self.pause_physics_service_client = rospy.ServiceProxy(pause_physics_service, Empty)
-        self.unpause_physics_service_client = rospy.ServiceProxy(unpause_physics_service, Empty)
-        self.set_entity_state_service_client = rospy.ServiceProxy(set_entity_state_service, SetModelState)
-        self.global_localization_service_client = rospy.ServiceProxy(global_localization_service, Empty)
-
         # setup buffers
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
         # setup publishers
-        self.initial_pose_publisher = rospy.Publisher(initial_pose_topic, PoseWithCovarianceStamped, queue_size=1)
         self.traversal_path_publisher = rospy.Publisher("~/traversal_path", Path, queue_size=1)
 
         # setup subscribers
@@ -226,50 +214,7 @@ class LocalizationBenchmarkSupervisor:
             traversal_path_msg.poses.append(traversal_pose_stamped)
         self.traversal_path_publisher.publish(traversal_path_msg)
 
-        # pop the first pose from traversal_path_poses and set it as initial pose
-        self.initial_pose = PoseWithCovarianceStamped()
-        self.initial_pose.header.frame_id = self.fixed_frame
-        self.initial_pose.pose.pose = self.traversal_path_poses.popleft()
-        self.initial_pose.pose.covariance = list(self.initial_pose_covariance_matrix.flat)
-
         self.num_goals = len(self.traversal_path_poses)
-
-        # set the position of the robot in the simulator
-        try:
-            self.pause_physics_service_client.wait_for_service(5.0)
-        except rospy.ROSException:
-            raise RunFailException("pause_physics_service_client unavailable")
-        self.pause_physics_service_client.call()
-        print_info("called pause_physics_service")
-        time.sleep(1.0)
-
-        robot_entity_state = ModelState(
-            model_name=self.robot_entity_name,
-            pose=self.initial_pose.pose.pose
-        )
-        try:
-            self.set_entity_state_service_client.wait_for_service(5.0)
-        except rospy.ROSException:
-            raise RunFailException("set_entity_state_service_client unavailable")
-        set_entity_state_response = self.set_entity_state_service_client.call(robot_entity_state)
-        if not set_entity_state_response.success:
-            self.write_event('failed_to_set_entity_state')
-            raise RunFailException("could not set robot entity state")
-        print_info("called set_entity_state_service")
-        time.sleep(1.0)
-
-        try:
-            self.unpause_physics_service_client.wait_for_service(5.0)
-        except rospy.ROSException:
-            raise RunFailException("unpause_physics_service_client unavailable")
-        self.unpause_physics_service_client.call()
-        print_info("called unpause_physics_service")
-        time.sleep(1.0)
-
-        # send the initial pose to the localization node
-        self.initial_pose.header.stamp = rospy.Time.now()
-        self.initial_pose_publisher.publish(self.initial_pose)
-        self.write_event("initial_pose_set")
 
         self.write_event('run_start')
         self.run_started = True
