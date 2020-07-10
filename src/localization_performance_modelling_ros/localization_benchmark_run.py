@@ -289,7 +289,7 @@ class BenchmarkRun(object):
             localization = Component('slam_toolbox', 'localization_performance_modelling', 'slam_toolbox.launch', localization_params)
         else:
             raise ValueError()
-        ground_truth_map_server = Component('ground_truth_map_server', 'ground_truth_mapping', 'ground_truth_map_server.launch', ground_truth_map_server_params)
+        ground_truth_map_server = Component('ground_truth_map_server', 'localization_performance_modelling', 'ground_truth_map_server.launch', ground_truth_map_server_params)
         navigation = Component('move_base', 'localization_performance_modelling', 'move_base.launch', navigation_params)
         supervisor = Component('supervisor', 'localization_performance_modelling', 'localization_benchmark_supervisor.launch', supervisor_params)
 
