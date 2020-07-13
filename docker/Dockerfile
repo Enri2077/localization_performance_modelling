@@ -46,12 +46,9 @@ COPY ros_entrypoint.sh /ros_entrypoint.sh
 
 
 # switch to user
+RUN adduser $user_name sudo
+RUN echo "$user_name ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 USER $user_name:$user_group
-
-
-# copy bashrc files
-COPY .bashrc ~/.bashrc
-COPY .bash_aliases ~/.bash_aliases
 
 
 # clone repos
@@ -67,9 +64,9 @@ RUN \
 
 # build workspace and install python user packages
 RUN \
-  source /opt/ros/melodic/setup.bash && \
+  . /opt/ros/melodic/setup.sh && \
   cd ~/w/catkin_ws && \
-  catkin build
+  catkin build -j 6
 
 RUN \
   pip install pyquaternion && \
@@ -80,4 +77,17 @@ RUN \
 RUN \
   cd ~/w/catkin_ws/src/performance_modelling/ && \
   ./install_dev.sh
+
+RUN mkdir -p ~/ds/performance_modelling
+RUN mkdir -p ~/.ros/log
+
+# copy bashrc files
+COPY .bashrc /home/$user_name/.bashrc
+RUN sudo chown $user_name:$user_name /home/$user_name/.bashrc
+COPY .bash_aliases /home/$user_name/.bash_aliases
+RUN sudo chown $user_name:$user_name /home/$user_name/.bash_aliases
+RUN \
+  sudo apt update && \
+  sudo apt install -y bash-completion htop && \
+  sudo rm -rf /var/lib/apt/lists/*
 
