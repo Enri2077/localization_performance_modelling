@@ -141,5 +141,7 @@ clear
 # change owner of mounted volumes
 sudo chown `id -u`:`id -g` ~/ds/performance_modelling/
 sudo chown `id -u`:`id -g` ~/.ros/log/
+sudo rosdep init
+rosdep update
 
 cd ~
