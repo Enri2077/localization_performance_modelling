@@ -6,16 +6,12 @@ ARG user_gid
 ARG user_group
 
 
-# create user
-RUN \
-  groupadd --gid $user_gid $user_group && \
-  useradd --uid $user_uid --gid $user_group --shell /bin/bash --create-home $user_name
-
-
 # Install dependences
 RUN \
-  sudo apt update && \
-  sudo apt install -y \
+  apt update && \
+  apt install -y \
+    bash-completion \
+    htop \
     python-pandas \
     python3-pandas \
     python-termcolor \
@@ -46,6 +42,9 @@ COPY ros_entrypoint.sh /ros_entrypoint.sh
 
 
 # switch to user
+RUN \
+  groupadd --gid $user_gid $user_group && \
+  useradd --uid $user_uid --gid $user_group --shell /bin/bash --create-home $user_name
 RUN adduser $user_name sudo
 RUN echo "$user_name ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 USER $user_name:$user_group
@@ -86,8 +85,3 @@ COPY .bashrc /home/$user_name/.bashrc
 RUN sudo chown $user_name:$user_name /home/$user_name/.bashrc
 COPY .bash_aliases /home/$user_name/.bash_aliases
 RUN sudo chown $user_name:$user_name /home/$user_name/.bash_aliases
-RUN \
-  sudo apt update && \
-  sudo apt install -y bash-completion htop && \
-  sudo rm -rf /var/lib/apt/lists/*
-
