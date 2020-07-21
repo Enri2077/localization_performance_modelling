@@ -14,6 +14,8 @@ RUN \
     htop \
     python-pandas \
     python3-pandas \
+    python-yaml \
+    python3-yaml \
     python-termcolor \
     python3-termcolor \
     python-psutil \
