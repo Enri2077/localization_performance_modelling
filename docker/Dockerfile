@@ -12,6 +12,7 @@ RUN \
   apt install -y \
     bash-completion \
     htop \
+    nano \
     python-pandas \
     python3-pandas \
     python-yaml \
