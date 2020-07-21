@@ -277,12 +277,16 @@ class BenchmarkRun(object):
         supervisor_params = {
             'params_file': self.supervisor_configuration_path,
         }
+        recorder_benchmark_data_params = {
+            'bag_file_path': path.join(self.run_output_folder, "benchmark_data.bag"),
+            'topics': "/amcl_pose /base_footprint_gt /cmd_vel /initialpose /map_gt /map_gt_metadata /map_gt_updates /map /map_metadata /map_updates /odom /particlecloud /rosout /rosout_agg /scan /scan_gt /tf /tf_static /traversal_path",
+        }
 
         # declare components
         roscore = Component('roscore', 'localization_performance_modelling', 'roscore.launch')
         environment = Component('gazebo', 'localization_performance_modelling', 'gazebo.launch', environment_params)
         rviz = Component('rviz', 'localization_performance_modelling', 'rviz.launch', rviz_params)
-        # recorder = Component('recorder', 'localization_performance_modelling', 'rosbag_recorder.launch', recorder_params)
+        recorder_benchmark_data = Component('recorder_sensor_data', 'localization_performance_modelling', 'rosbag_recorder.launch', recorder_benchmark_data_params)
         if self.localization_node == 'amcl':
             localization = Component('amcl', 'localization_performance_modelling', 'amcl.launch', localization_params)
         elif self.localization_node == 'slam_toolbox':
@@ -301,7 +305,7 @@ class BenchmarkRun(object):
         roscore.launch()
         environment.launch()
         rviz.launch()
-        # recorder.launch()
+        recorder_benchmark_data.launch()
         localization.launch()
         ground_truth_map_server.launch()
         navigation.launch()
@@ -316,7 +320,7 @@ class BenchmarkRun(object):
         ground_truth_map_server.shutdown()
         navigation.shutdown()
         localization.shutdown()
-        # recorder.shutdown()
+        recorder_benchmark_data.shutdown()
         rviz.shutdown()
         environment.shutdown()
         roscore.shutdown()
