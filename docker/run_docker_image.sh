@@ -10,8 +10,8 @@ if [ $# -eq 2 ]
         --name ${USER}_localization_benchmark_$1 \
         --user $(id -u):$(id -g) \
         --cpuset-cpus "$2" \
-        -v ~/ds/performance_modelling:/home/${USER}/ds/performance_modelling \
-        -v ~/ds/performance_modelling/ros_logs:/home/${USER}/.ros/log \
+        -v ~/datasets/private/performance_modelling:/home/${USER}/ds/performance_modelling \
+        -v ~/datasets/private/performance_modelling/ros_logs:/home/${USER}/.ros/log \
         ${USER}/localization_benchmark:v1
   else
     echo "usage: $0 container_id cpu_set"
