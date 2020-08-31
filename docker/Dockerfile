@@ -23,6 +23,7 @@ RUN \
     python3-psutil \
     python-pip \
     python3-pip \
+    python-skimage \
     python-catkin-tools \
     ros-melodic-catkin \
     ros-melodic-gazebo-ros \
@@ -36,7 +37,9 @@ RUN \
     ros-melodic-slam-toolbox \
     ros-melodic-amcl \
     ros-melodic-move-base \
+    ros-melodic-global-planner \
     ros-melodic-dwa-local-planner \
+    ros-melodic-tf2-sensor-msgs \
     && rm -rf /var/lib/apt/lists/*
 
 
@@ -61,6 +64,7 @@ RUN \
   git clone --branch=melodic-devel https://github.com/Enri2077/localization_performance_modelling.git && \
   git clone --branch=melodic-devel https://github.com/Enri2077/ground_truth_mapping.git && \
   git clone --branch=melodic-devel https://github.com/Enri2077/gazebo_ros_pkgs.git && \
+  git clone --branch=melodic-devel https://github.com/Enri2077/escape_lethal_cost_recovery_behavior.git && \
   git clone --branch=melodic-ground-truth-mapping https://github.com/Enri2077/slam_toolbox.git
 
 
