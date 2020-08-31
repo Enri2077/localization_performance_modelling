@@ -9,7 +9,7 @@ from os import path
 import yaml
 from performance_modelling_py.environment.ground_truth_map import GroundTruthMap
 
-from performance_modelling_py.utils import print_info, print_error
+from performance_modelling_py.utils import print_info, print_error, backup_file_if_exists
 from performance_modelling_py.metrics.localization_metrics import trajectory_length_metric, absolute_localization_error_metrics, absolute_error_vs_voronoi_radius, absolute_error_vs_scan_range, absolute_error_vs_geometric_similarity, \
     relative_localization_error_metrics
 from performance_modelling_py.metrics.computation_metrics import cpu_and_memory_usage_metrics
@@ -72,12 +72,15 @@ def compute_metrics(run_output_folder):
             yaml.dump(metrics_result_dict, metrics_result_file, default_flow_style=False)
 
     absolute_error_vs_voronoi_radius_df = absolute_error_vs_voronoi_radius(estimated_poses_path, ground_truth_poses_path, ground_truth_map)
+    backup_file_if_exists(path.join(metrics_result_folder_path, "abs_err_vs_voronoi_radius.csv"))
     absolute_error_vs_voronoi_radius_df.to_csv(path.join(metrics_result_folder_path, "abs_err_vs_voronoi_radius.csv"))
 
     absolute_error_vs_scan_range_df = absolute_error_vs_scan_range(estimated_poses_path, ground_truth_poses_path, scans_file_path)
+    backup_file_if_exists(path.join(metrics_result_folder_path, "absolute_error_vs_scan_range.csv"))
     absolute_error_vs_scan_range_df.to_csv(path.join(metrics_result_folder_path, "absolute_error_vs_scan_range.csv"))
 
-    absolute_error_vs_geometric_similarity_df = absolute_error_vs_geometric_similarity(estimated_poses_path, ground_truth_poses_path, ground_truth_map, horizon_length=laser_scan_max_range, max_iterations=1, samples_per_second=1)
+    absolute_error_vs_geometric_similarity_df = absolute_error_vs_geometric_similarity(estimated_poses_path, ground_truth_poses_path, ground_truth_map, horizon_length=laser_scan_max_range, max_iterations=5, samples_per_second=1)
+    backup_file_if_exists(path.join(metrics_result_folder_path, "absolute_error_vs_geometric_similarity.csv"))
     absolute_error_vs_geometric_similarity_df.to_csv(path.join(metrics_result_folder_path, "absolute_error_vs_geometric_similarity.csv"))
 
     # # visualisation
@@ -87,7 +90,8 @@ def compute_metrics(run_output_folder):
 
 
 if __name__ == '__main__':
-    run_folders = sorted(list(filter(path.isdir, glob.glob(path.expanduser("~/ds/performance_modelling/output/localization/*")))))
+    import traceback
+    run_folders = sorted(list(filter(path.isdir, glob.glob(path.expanduser("~/ds/performance_modelling/output/localization_v2/*")))))
     # run_folders = list(filter(path.isdir, glob.glob(path.expanduser("~/ds/elysium/performance_modelling/output/localization/*"))))
     for progress, run_folder in enumerate(run_folders):
         print_info("main: compute_metrics {}% {}".format((progress + 1)*100/len(run_folders), run_folder))
@@ -98,6 +102,7 @@ if __name__ == '__main__':
             print_info("aborting due to KeyboardInterrupt")
             break
         except:
+            print(traceback.format_exc())
             print_error("failed computing metrics for run folder [{}]".format(run_folder))
 
     # run_folders = list(filter(path.isdir, glob.glob(path.expanduser("~/ds/elysium/performance_modelling/output/localization/*"))))
