@@ -24,6 +24,9 @@ RUN \
     python-pip \
     python3-pip \
     python-skimage \
+    python3-skimage \
+    python-sklearn \
+    python3-sklearn \
     python-catkin-tools \
     ros-melodic-catkin \
     ros-melodic-gazebo-ros \
@@ -62,7 +65,6 @@ RUN \
   cd ~/w/catkin_ws/src && \
   git clone https://github.com/Enri2077/performance_modelling.git && \
   git clone --branch=melodic-devel https://github.com/Enri2077/localization_performance_modelling.git && \
-  git clone --branch=melodic-devel https://github.com/Enri2077/ground_truth_mapping.git && \
   git clone --branch=melodic-devel https://github.com/Enri2077/gazebo_ros_pkgs.git && \
   git clone --branch=melodic-devel https://github.com/Enri2077/escape_lethal_cost_recovery_behavior.git && \
   git clone --branch=melodic-ground-truth-mapping https://github.com/Enri2077/slam_toolbox.git
@@ -78,7 +80,9 @@ RUN \
   pip install pyquaternion && \
   pip3 install pyquaternion && \
   pip install networkx && \
-  pip3 install networkx
+  pip3 install networkx && \
+  pip install scikit-image && \
+  pip3 install scikit-image
 
 RUN \
   cd ~/w/catkin_ws/src/performance_modelling/ && \
