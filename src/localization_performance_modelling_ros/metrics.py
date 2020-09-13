@@ -48,11 +48,11 @@ def compute_metrics(run_output_folder):
         print_info("trajectory_length")
         metrics_result_dict['trajectory_length'] = trajectory_length_metric(ground_truth_poses_path)
 
-        print_info("relative_localization_correction_error")
-        metrics_result_dict['relative_localization_correction_error'] = relative_localization_error_metrics(path.join(logs_folder_path, "relative_localisation_correction_error"), estimated_correction_poses_path, ground_truth_poses_path)
-
-        print_info("relative_localization_error")
-        metrics_result_dict['relative_localization_error'] = relative_localization_error_metrics(path.join(logs_folder_path, "relative_localisation_error"), estimated_poses_path, ground_truth_poses_path)
+        # print_info("relative_localization_correction_error")
+        # metrics_result_dict['relative_localization_correction_error'] = relative_localization_error_metrics(path.join(logs_folder_path, "relative_localisation_correction_error"), estimated_correction_poses_path, ground_truth_poses_path)
+        #
+        # print_info("relative_localization_error")
+        # metrics_result_dict['relative_localization_error'] = relative_localization_error_metrics(path.join(logs_folder_path, "relative_localisation_error"), estimated_poses_path, ground_truth_poses_path)
 
         print_info("absolute_localization_correction_error")
         metrics_result_dict['absolute_localization_correction_error'] = absolute_localization_error_metrics(estimated_correction_poses_path, ground_truth_poses_path)
@@ -71,17 +71,17 @@ def compute_metrics(run_output_folder):
         with open(metrics_result_file_path, 'w') as metrics_result_file:
             yaml.dump(metrics_result_dict, metrics_result_file, default_flow_style=False)
 
-    absolute_error_vs_voronoi_radius_df = absolute_error_vs_voronoi_radius(estimated_poses_path, ground_truth_poses_path, ground_truth_map)
-    backup_file_if_exists(path.join(metrics_result_folder_path, "abs_err_vs_voronoi_radius.csv"))
-    absolute_error_vs_voronoi_radius_df.to_csv(path.join(metrics_result_folder_path, "abs_err_vs_voronoi_radius.csv"))
-
-    absolute_error_vs_scan_range_df = absolute_error_vs_scan_range(estimated_poses_path, ground_truth_poses_path, scans_file_path)
-    backup_file_if_exists(path.join(metrics_result_folder_path, "absolute_error_vs_scan_range.csv"))
-    absolute_error_vs_scan_range_df.to_csv(path.join(metrics_result_folder_path, "absolute_error_vs_scan_range.csv"))
-
-    absolute_error_vs_geometric_similarity_df = absolute_error_vs_geometric_similarity(estimated_poses_path, ground_truth_poses_path, ground_truth_map, horizon_length=laser_scan_max_range, max_iterations=5, samples_per_second=1)
-    backup_file_if_exists(path.join(metrics_result_folder_path, "absolute_error_vs_geometric_similarity.csv"))
-    absolute_error_vs_geometric_similarity_df.to_csv(path.join(metrics_result_folder_path, "absolute_error_vs_geometric_similarity.csv"))
+    # absolute_error_vs_voronoi_radius_df = absolute_error_vs_voronoi_radius(estimated_poses_path, ground_truth_poses_path, ground_truth_map)
+    # backup_file_if_exists(path.join(metrics_result_folder_path, "abs_err_vs_voronoi_radius.csv"))
+    # absolute_error_vs_voronoi_radius_df.to_csv(path.join(metrics_result_folder_path, "abs_err_vs_voronoi_radius.csv"))
+    #
+    # absolute_error_vs_scan_range_df = absolute_error_vs_scan_range(estimated_poses_path, ground_truth_poses_path, scans_file_path)
+    # backup_file_if_exists(path.join(metrics_result_folder_path, "absolute_error_vs_scan_range.csv"))
+    # absolute_error_vs_scan_range_df.to_csv(path.join(metrics_result_folder_path, "absolute_error_vs_scan_range.csv"))
+    #
+    # absolute_error_vs_geometric_similarity_df = absolute_error_vs_geometric_similarity(estimated_poses_path, ground_truth_poses_path, ground_truth_map, horizon_length=laser_scan_max_range, max_iterations=5, samples_per_second=1)
+    # backup_file_if_exists(path.join(metrics_result_folder_path, "absolute_error_vs_geometric_similarity.csv"))
+    # absolute_error_vs_geometric_similarity_df.to_csv(path.join(metrics_result_folder_path, "absolute_error_vs_geometric_similarity.csv"))
 
     # # visualisation
     # print_info("visualisation")
