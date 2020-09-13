@@ -49,7 +49,12 @@ class BenchmarkRun(object):
         self.localization_node = self.run_parameters['localization_node']
         slam_params_folder_name = "res_{res}_fov_{fov}_max_range_{max_range}".format(res=map_resolution, fov=laser_scan_fov_deg, max_range=60.0)
         self.slam_toolbox_posegraph_path = path.join(environment_folder, "data", "realistic_map", slam_params_folder_name, "pose_graph")
-        self.amcl_map_info_path = path.join(environment_folder, "data", "realistic_map", slam_params_folder_name, "map.yaml")
+        if self.run_parameters['map_source'] == 'ideal_map':
+            self.amcl_map_info_path = path.join(environment_folder, "data", "map.yaml")
+        elif self.run_parameters['map_source'] == 'slam_toolbox_map':
+            self.amcl_map_info_path = path.join(environment_folder, "data", "realistic_map", slam_params_folder_name, "map.yaml")
+        else:
+            raise ValueError()
 
         # run variables
         self.aborted = False
