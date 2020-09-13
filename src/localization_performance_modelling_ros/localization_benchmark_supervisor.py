@@ -294,7 +294,7 @@ class LocalizationBenchmarkSupervisor:
         print_error("terminating supervisor due to timeout, terminating run")
         self.write_event('run_timeout')
         self.write_event('supervisor_finished')
-        raise RunFailException("run_timeout")
+        rospy.signal_shutdown("run_timeout")
 
     def scan_callback(self, laser_scan_msg):
         self.received_first_scan = True
