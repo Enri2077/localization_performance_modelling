@@ -49,7 +49,7 @@ if __name__ == '__main__':
                         required=False)
 
     parser.add_argument('--gui', dest='gui',
-                        help='When set the components are run with no GUI.',
+                        help='When set the components are run with GUI (opposite of headless).',
                         action='store_true',
                         required=False)
 
