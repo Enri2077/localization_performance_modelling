@@ -48,12 +48,21 @@ class BenchmarkRun(object):
         laser_scan_fov_rad = laser_scan_fov_deg*np.pi/180
         map_resolution = self.run_parameters['map_resolution']
         self.localization_node = self.run_parameters['localization_node']
-        slam_params_folder_name = "res_{res}_fov_{fov}_max_range_{max_range}".format(res=map_resolution, fov=laser_scan_fov_deg, max_range=60.0)
-        self.slam_toolbox_posegraph_path = path.join(environment_folder, "data", "realistic_map", slam_params_folder_name, "pose_graph")
+
         if self.run_parameters['map_source'] == 'ideal_map':
             self.amcl_map_info_path = path.join(environment_folder, "data", "map.yaml")
+            self.slam_toolbox_posegraph_path = None
+
         elif self.run_parameters['map_source'] == 'slam_toolbox_map':
+            slam_params_folder_name = "res_{res}_fov_{fov}_max_range_{max_range}_no_scan_matching".format(res=map_resolution, fov=laser_scan_fov_deg, max_range=60.0)
             self.amcl_map_info_path = path.join(environment_folder, "data", "realistic_map", slam_params_folder_name, "map.yaml")
+            self.slam_toolbox_posegraph_path = None
+
+        elif self.run_parameters['map_source'] == 'slam_toolbox_no_scan_matching_pose_graph':
+            slam_params_folder_name = "res_{res}_fov_{fov}_max_range_{max_range}_no_scan_matching".format(res=map_resolution, fov=laser_scan_fov_deg, max_range=60.0)
+            self.amcl_map_info_path = None
+            self.slam_toolbox_posegraph_path = path.join(environment_folder, "data", "realistic_map", slam_params_folder_name, "pose_graph")
+
         else:
             raise ValueError()
 
