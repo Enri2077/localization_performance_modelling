@@ -257,6 +257,7 @@ class BenchmarkRun(object):
         components_launcher = ComponentsLauncher()
         if not self.headless:
             components_launcher.add_component(rviz)
+        # components_launcher.add_component(rviz)
         # recorder.launch()
         components_launcher.add_component(environment)
         components_launcher.add_component(navigation)

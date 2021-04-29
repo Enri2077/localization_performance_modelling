@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 import random
 import time
 import traceback
@@ -86,6 +87,7 @@ class LocalizationBenchmarkSupervisor(Node):
         set_entity_state_service = self.get_parameter('set_entity_state_service').value
         navigate_to_pose_action = self.get_parameter('navigate_to_pose_action').value
         self.fixed_frame = self.get_parameter('fixed_frame').value
+        self.robot_base_frame = self.get_parameter('robot_base_frame').value
         self.robot_entity_name = self.get_parameter('robot_entity_name').value
 
         # file system paths
@@ -148,6 +150,7 @@ class LocalizationBenchmarkSupervisor(Node):
         self.create_timer(run_timeout, self.run_timeout_callback)
         self.create_timer(ps_snapshot_period, self.ps_snapshot_timer_callback)
         self.create_timer(write_estimated_poses_period, self.write_estimated_pose_timer_callback)
+        # self.create_timer(1.0, self.test_timer_callback)
 
         # setup service clients
         self.lifecycle_manager_service_client = self.create_client(ManageLifecycleNodes, lifecycle_manager_service)
@@ -285,6 +288,8 @@ class LocalizationBenchmarkSupervisor(Node):
             self.write_event(self.get_clock().now(), 'failed_to_startup_nodes')
             raise RunFailException("lifecycle manager could not startup nodes")
 
+        time.sleep(5.0)
+
         self.write_event(self.get_clock().now(), 'run_start')
         self.run_started = True
 
@@ -292,6 +297,10 @@ class LocalizationBenchmarkSupervisor(Node):
 
     def send_goal(self):
         print_info(f"goal {self.goal_sent_count + 1} / {self.num_goals}")
+
+        print_info("waiting")
+        time.sleep(5.0)
+        print_info("finished waiting")
 
         if not self.navigate_to_pose_action_client.wait_for_server(timeout_sec=5.0):
             self.write_event(self.get_clock().now(), 'failed_to_communicate_with_navigation_node')
@@ -310,6 +319,7 @@ class LocalizationBenchmarkSupervisor(Node):
         self.navigate_to_pose_action_goal_future = self.navigate_to_pose_action_client.send_goal_async(goal_msg)
         self.navigate_to_pose_action_goal_future.add_done_callback(self.goal_response_callback)
         self.write_event(self.get_clock().now(), 'target_pose_set')
+        print_info("goal_msg", goal_msg)
         self.goal_sent_count += 1
 
     def ros_shutdown_callback(self):
@@ -331,6 +341,7 @@ class LocalizationBenchmarkSupervisor(Node):
 
     def goal_response_callback(self, future):
         goal_handle = future.result()
+        print_info("goal_handle", goal_handle)
 
         # if the goal is rejected try with the next goal
         if not goal_handle.accepted:
@@ -348,6 +359,7 @@ class LocalizationBenchmarkSupervisor(Node):
 
     def get_result_callback(self, future):
         status = future.result().status
+        print_info("status", status)
 
         if status == GoalStatus.STATUS_SUCCEEDED:
             goal_position = self.current_goal.pose.pose.position
@@ -383,6 +395,10 @@ class LocalizationBenchmarkSupervisor(Node):
 
             self.localization_node_activated = True
             self.initial_pose_publisher.publish(self.initial_pose)
+            self.write_event(self.get_clock().now(), "initial_pose_set")
+
+    # def test_timer_callback(self):
+    #     print_info("test_timer_callback")
 
     def run_timeout_callback(self):
         print_error("terminating supervisor due to timeout, terminating run")
@@ -408,7 +424,7 @@ class LocalizationBenchmarkSupervisor(Node):
 
     def write_estimated_pose_timer_callback(self):
         try:
-            transform_msg = self.tf_buffer.lookup_transform('map', 'base_link', Time())
+            transform_msg = self.tf_buffer.lookup_transform(self.fixed_frame, self.robot_base_frame, Time())
             orientation = transform_msg.transform.rotation
             theta, _, _ = pyquaternion.Quaternion(x=orientation.x, y=orientation.y, z=orientation.z, w=orientation.w).yaw_pitch_roll
 

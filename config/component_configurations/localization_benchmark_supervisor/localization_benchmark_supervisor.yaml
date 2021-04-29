@@ -28,6 +28,7 @@ localization_benchmark_supervisor:
 
     # frame names
     fixed_frame: map
+    robot_base_frame: base_link_realistic
 
     # gazebo entity names
     robot_entity_name: robot  # base_footprint
