@@ -3,7 +3,7 @@ from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 
-from nav2_common.launch import Node
+from launch_ros.actions import Node
 from nav2_common.launch import RewrittenYaml
 
 
@@ -61,20 +61,20 @@ def generate_launch_description():
 
         Node(
             package='nav2_map_server',
-            node_executable='map_server',
-            node_name='map_server',
+            executable='map_server',
+            name='map_server',
             output='screen',
             parameters=[configured_params],
-            use_remappings=IfCondition(use_remappings),
+#            use_remappings=IfCondition(use_remappings),
             remappings=remappings),
 
         Node(
             package='nav2_amcl',
-            node_executable='amcl',
-            node_name='amcl',
+            executable='amcl',
+            name='amcl',
             output='screen',
             parameters=[configured_params],
-            use_remappings=IfCondition(use_remappings),
+#            use_remappings=IfCondition(use_remappings),
             remappings=remappings),
 
     ])

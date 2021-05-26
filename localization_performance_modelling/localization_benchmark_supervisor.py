@@ -262,24 +262,24 @@ class LocalizationBenchmarkSupervisor(Node):
         self.num_goals = len(self.traversal_path_poses)
 
         # set the position of the robot in the simulator
-        self.call_service(self.pause_physics_service_client, Empty.Request())
-        print_info("called pause_physics_service")
-        time.sleep(1.0)
-
-        robot_entity_state = EntityState(
-            name=self.robot_entity_name,
-            pose=self.initial_pose.pose.pose
-        )
-        set_entity_state_response = self.call_service(self.set_entity_state_service_client, SetEntityState.Request(state=robot_entity_state))
-        if not set_entity_state_response.success:
-            self.write_event(self.get_clock().now(), 'failed_to_set_entity_state')
-            raise RunFailException("could not set robot entity state")
-        print_info("called set_entity_state_service")
-        time.sleep(1.0)
-
-        self.call_service(self.unpause_physics_service_client, Empty.Request())
-        print_info("called unpause_physics_service")
-        time.sleep(1.0)
+#       self.call_service(self.pause_physics_service_client, Empty.Request())
+#        print_info("called pause_physics_service")
+#        time.sleep(1.0)
+#
+#        robot_entity_state = EntityState(
+#            name=self.robot_entity_name,
+#            pose=self.initial_pose.pose.pose
+#        )
+#        set_entity_state_response = self.call_service(self.set_entity_state_service_client, SetEntityState.Request(state=robot_entity_state))
+#        if not set_entity_state_response.success:
+#            self.write_event(self.get_clock().now(), 'failed_to_set_entity_state')
+#            raise RunFailException("could not set robot entity state")
+#        print_info("called set_entity_state_service")
+#        time.sleep(1.0)
+#
+#        self.call_service(self.unpause_physics_service_client, Empty.Request())
+#        print_info("called unpause_physics_service")
+#        time.sleep(1.0)
 
         # ask lifecycle_manager to startup all its managed nodes
         startup_request = ManageLifecycleNodes.Request(command=ManageLifecycleNodes.Request.STARTUP)

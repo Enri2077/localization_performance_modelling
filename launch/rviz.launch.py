@@ -19,7 +19,7 @@ from launch.actions import (DeclareLaunchArgument)
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 
-from nav2_common.launch import Node
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
@@ -34,12 +34,12 @@ def generate_launch_description():
 
     start_rviz_cmd = Node(
         package='rviz2',
-        node_executable='rviz2',
-        node_name='rviz2',
+        executable='rviz2',
+        name='rviz2',
         arguments=['-d', LaunchConfiguration('rviz_config_file')],
         output='log',
 
-        use_remappings=IfCondition(LaunchConfiguration('use_remappings')),
+#        use_remappings=IfCondition(LaunchConfiguration('use_remappings')),
         remappings=[('/tf', 'tf'),
                     ('/tf_static', 'tf_static'),
                     ('goal_pose', 'goal_pose'),

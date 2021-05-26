@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
@@ -12,6 +12,7 @@ from performance_modelling_py.benchmark_execution.grid_benchmarking import execu
 
 
 def main():
+
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description='Execute the benchmark')
 
     parser.add_argument('-e', dest='environment_dataset_folders',
@@ -35,11 +36,21 @@ def main():
     parser.add_argument('-n', '--num-runs', dest='num_runs',
                         help='Number of runs to be executed for each combination of configurations.',
                         type=int,
-                        default=1,
+                        default=10,
                         required=False)
 
-    parser.add_argument('-g', '--headless', dest='headless',
-                        help='When set the components are run with no GUI.',
+    parser.add_argument('--ignore-previous-runs', dest='ignore_previous_runs',
+                        help='When set the the previous runs in base_run_folder are ignored when counting the param combinations already executed.',
+                        action='store_true',
+                        required=False)
+
+    parser.add_argument('--no-shuffle', dest='no_shuffle',
+                        help='When set the order of the combinations is not randomized.',
+                        action='store_true',
+                        required=False)
+
+    parser.add_argument('--gui', dest='gui',
+                        help='When set the components are run with GUI (opposite of headless).',
                         action='store_true',
                         required=False)
 
@@ -50,7 +61,7 @@ def main():
 
     args = parser.parse_args()
     base_run_folder = path.expanduser(args.base_run_folder)
-    environment_folders = sorted(filter(path.isdir, glob.glob(path.expanduser(args.environment_dataset_folders), recursive=True)))
+    environment_folders = sorted(filter(path.isdir, glob.glob(path.expanduser(args.environment_dataset_folders))))
     grid_benchmark_configuration = path.expanduser(args.grid_benchmark_configuration)
 
     execute_grid_benchmark(benchmark_run_object=BenchmarkRun,
@@ -58,5 +69,8 @@ def main():
                            environment_folders=environment_folders,
                            base_run_folder=base_run_folder,
                            num_runs=args.num_runs,
-                           headless=args.headless,
+                           ignore_executed_params_combinations=args.ignore_previous_runs,
+                           shuffle=not args.no_shuffle,
+                           headless=not args.gui,
                            show_ros_info=args.show_ros_info)
+

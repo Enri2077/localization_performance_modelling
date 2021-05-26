@@ -3,7 +3,7 @@ from launch.actions import DeclareLaunchArgument, ExecuteProcess, SetEnvironment
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
 
-from nav2_common.launch import Node
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
@@ -40,22 +40,22 @@ def generate_launch_description():
             output='log'),
         Node(
             package='robot_state_publisher',
-            node_executable='robot_state_publisher',
-            node_name='robot_state_publisher_gt',
+            executable='robot_state_publisher',
+            name='robot_state_publisher_gt',
             output='log',
             parameters=[{'use_sim_time': True}],
             arguments=[LaunchConfiguration('robot_gt_urdf_file')]),
         Node(
             package='tf2_ros',
-            node_executable='static_transform_publisher',
-            node_name='gt_odom_static_transform_publisher',
+            executable='static_transform_publisher',
+            name='gt_odom_static_transform_publisher',
             output='log',
             parameters=[{'use_sim_time': True}],
             arguments=["0", "0", "0", "0", "0", "0", "map", "odom"]),  # odom is actually the ground truth, because currently (Eloquent) odom and base_link are hardcoded in the navigation stack (recoveries and controller) >:C
         Node(
             package='robot_state_publisher',
-            node_executable='robot_state_publisher',
-            node_name='robot_state_publisher_realistic',
+            executable='robot_state_publisher',
+            name='robot_state_publisher_realistic',
             output='log',
             parameters=[{'use_sim_time': True}],
             arguments=[LaunchConfiguration('robot_realistic_urdf_file')]),

@@ -8,7 +8,7 @@ from launch.conditions import IfCondition
 from launch.events import Shutdown
 from launch.substitutions import LaunchConfiguration
 
-from nav2_common.launch import Node
+from launch_ros.actions import Node
 from nav2_common.launch import RewrittenYaml
 
 
@@ -65,54 +65,54 @@ def generate_launch_description():
 
         Node(
             package='nav2_controller',
-            node_executable='controller_server',
+            executable='controller_server',
             output='log',
             parameters=[configured_params],
-            use_remappings=IfCondition(use_remappings),
+#            use_remappings=IfCondition(use_remappings),
             remappings=remappings,
             on_exit=EmitEvent(event=Shutdown(reason='nav2_controller_error'))
         ),
 
         Node(
             package='nav2_planner',
-            node_executable='planner_server',
-            node_name='planner_server',
+            executable='planner_server',
+            name='planner_server',
             output='log',
             parameters=[configured_params],
-            use_remappings=IfCondition(use_remappings),
+#            use_remappings=IfCondition(use_remappings),
             remappings=remappings,
             on_exit=EmitEvent(event=Shutdown(reason='nav2_planner_error'))
         ),
 
         Node(
             package='nav2_recoveries',
-            node_executable='recoveries_server',
-            node_name='recoveries_server',
+            executable='recoveries_server',
+            name='recoveries_server',
             output='log',
             parameters=[{'use_sim_time': use_sim_time}],
-            use_remappings=IfCondition(use_remappings),
+#            use_remappings=IfCondition(use_remappings),
             remappings=remappings,
             on_exit=EmitEvent(event=Shutdown(reason='nav2_recoveries_error'))
         ),
 
         Node(
             package='nav2_bt_navigator',
-            node_executable='bt_navigator',
-            node_name='bt_navigator',
+            executable='bt_navigator',
+            name='bt_navigator',
             output='log',
             parameters=[configured_params],
-            use_remappings=IfCondition(use_remappings),
+#            use_remappings=IfCondition(use_remappings),
             remappings=remappings,
             on_exit=EmitEvent(event=Shutdown(reason='nav2_bt_navigator_error'))
         ),
 
         Node(
             package='nav2_waypoint_follower',
-            node_executable='waypoint_follower',
-            node_name='waypoint_follower',
+            executable='waypoint_follower',
+            name='waypoint_follower',
             output='log',
             parameters=[configured_params],
-            use_remappings=IfCondition(use_remappings),
+#            use_remappings=IfCondition(use_remappings),
             remappings=remappings,
             on_exit=EmitEvent(event=Shutdown(reason='nav2_waypoint_follower_error'))
         ),

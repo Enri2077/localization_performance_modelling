@@ -9,8 +9,8 @@ from launch_ros.actions import Node
 def generate_launch_description():
     localization_benchmark_supervisor_node = Node(
         package='localization_performance_modelling',
-        node_executable='localization_benchmark_supervisor',
-        node_name='localization_benchmark_supervisor',
+        executable='localization_benchmark_supervisor',
+        name='localization_benchmark_supervisor',
         output='screen',
         emulate_tty=True,
         parameters=[LaunchConfiguration('configuration')],
@@ -31,8 +31,8 @@ def generate_launch_description():
 
         Node(
             package='nav2_lifecycle_manager',
-            node_executable='lifecycle_manager',
-            node_name='lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager',
             output='screen',
             parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')},
                         {'node_names': ['map_server',

@@ -18,3 +18,5 @@ combinatorial_parameters:
 #  laser_scan_max_range: [3.5]
 #  laser_scan_fov_deg: [90, 180, 270, 360]
   laser_scan_fov_deg: [270]
+#  local_planner_node: ['teb', 'dwb']
+#  min_samples: [3, 5, 10]
